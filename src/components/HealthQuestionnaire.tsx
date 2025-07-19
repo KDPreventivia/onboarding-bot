@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Question {
   id: string;
@@ -169,7 +170,7 @@ export default function HealthQuestionnaire() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     // Calculate total score
     const totalScore = healthQuestions.reduce((sum, question) => {
       const answer = answers[question.id];
@@ -179,15 +180,43 @@ export default function HealthQuestionnaire() {
 
     const maxScore = healthQuestions.length * 4;
     const percentage = Math.round((totalScore / maxScore) * 100);
+    const { category } = getScoreCategory();
 
-    // Here you would normally save to Supabase
-    console.log('Questionnaire completed:', { answers, totalScore, percentage });
-    
-    setIsComplete(true);
-    toast({
-      title: "Questionnaire Complete!",
-      description: `Your health score: ${percentage}%. Results ready for review.`
-    });
+    try {
+      // Save to Supabase
+      const { error } = await supabase
+        .from('health_assessments')
+        .insert({
+          responses: answers,
+          total_score: totalScore,
+          score_category: category
+        });
+
+      if (error) {
+        console.error('Error saving assessment:', error);
+        toast({
+          title: "Error saving assessment",
+          description: "There was a problem saving your responses. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Questionnaire completed and saved:', { answers, totalScore, percentage });
+      
+      setIsComplete(true);
+      toast({
+        title: "Assessment Saved!",
+        description: `Your health score: ${percentage}%. Results saved successfully.`
+      });
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getScoreCategory = () => {

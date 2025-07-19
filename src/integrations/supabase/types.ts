@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      health_assessments: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          responses: Json
+          score_category: string
+          total_score: number
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          responses: Json
+          score_category: string
+          total_score: number
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          responses?: Json
+          score_category?: string
+          total_score?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
